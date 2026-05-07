@@ -1,0 +1,31 @@
+package co.edu.uniquindio.ingesis.pokeapi.di
+
+import android.content.Context
+import androidx.room.Room
+import co.edu.uniquindio.ingesis.pokeapi.data.local.AppDatabase
+import co.edu.uniquindio.ingesis.pokeapi.data.local.dao.PokemonCacheDao
+import co.edu.uniquindio.ingesis.pokeapi.data.local.dao.PokemonDetailDao
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+object DatabaseModule {
+
+    @Provides
+    @Singleton
+    fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
+        Room.databaseBuilder(context, AppDatabase::class.java, "pokemon_db")
+            .fallbackToDestructiveMigration()
+            .build()
+
+    @Provides
+    fun providePokemonCacheDao(db: AppDatabase): PokemonCacheDao = db.pokemonCacheDao()
+
+    @Provides
+    fun providePokemonDetailDao(db: AppDatabase): PokemonDetailDao = db.pokemonDetailDao()
+}
