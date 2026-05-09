@@ -17,6 +17,24 @@ class FakePokemonRepository : PokemonRepository {
 
     override fun observePokemonList(): Flow<List<PokemonListItem>> = listState.asStateFlow()
 
+    override fun observeFilteredPokemonList(
+        query: String,
+        type: String?,
+        limit: Int,
+        offset: Int,
+    ): Flow<List<PokemonListItem>> {
+        return listState.asStateFlow().map { items ->
+            items.filter { item ->
+                val matchesSearch =
+                    query.isBlank() ||
+                        item.name.contains(query, ignoreCase = true) ||
+                        item.id.toString() == query
+                val matchesType = type == null || item.types.contains(type)
+                matchesSearch && matchesType
+            }.drop(offset).take(limit)
+        }
+    }
+
     override suspend fun fetchPokemonPage(
         page: Int,
         pageSize: Int,
