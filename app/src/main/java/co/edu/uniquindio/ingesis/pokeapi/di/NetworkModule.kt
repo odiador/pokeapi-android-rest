@@ -65,7 +65,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideConnectivityObserver(
-        @dagger.hilt.android.qualifiers.ApplicationContext context: android.content.Context
+        @dagger.hilt.android.qualifiers.ApplicationContext context: android.content.Context,
     ): co.edu.uniquindio.ingesis.pokeapi.data.remote.api.ConnectivityObserver {
         return co.edu.uniquindio.ingesis.pokeapi.data.remote.api.NetworkConnectivityObserver(context)
     }

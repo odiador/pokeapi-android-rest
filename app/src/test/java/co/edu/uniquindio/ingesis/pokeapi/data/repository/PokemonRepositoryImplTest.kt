@@ -8,7 +8,9 @@ import co.edu.uniquindio.ingesis.pokeapi.data.remote.api.PokemonApiService
 import co.edu.uniquindio.ingesis.pokeapi.data.remote.dto.NamedResourceDto
 import co.edu.uniquindio.ingesis.pokeapi.data.remote.dto.PokemonDto
 import co.edu.uniquindio.ingesis.pokeapi.data.remote.dto.PokemonListResponseDto
+import co.edu.uniquindio.ingesis.pokeapi.data.remote.dto.PokemonSpeciesDto
 import co.edu.uniquindio.ingesis.pokeapi.data.remote.dto.SpritesDto
+import co.edu.uniquindio.ingesis.pokeapi.data.remote.dto.TypeDetailDto
 import co.edu.uniquindio.ingesis.pokeapi.data.remote.dto.TypeSlotDto
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -113,6 +115,22 @@ class PokemonRepositoryImplTest {
                         types = listOf(TypeSlotDto(NamedResourceDto(name = "normal"))),
                     )
             }
+        }
+
+        override suspend fun getPokemonByName(name: String): PokemonDto {
+            return getPokemonDetail(1)
+        }
+
+        override suspend fun getPokemonSpecies(id: Int): PokemonSpeciesDto {
+            return PokemonSpeciesDto(
+                id = id,
+                name = "species-$id",
+                flavorTextEntries = emptyList(),
+            )
+        }
+
+        override suspend fun getTypeDetail(name: String): TypeDetailDto {
+            return TypeDetailDto(id = 1, name = name, pokemon = emptyList())
         }
     }
 }

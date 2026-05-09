@@ -6,6 +6,8 @@ import co.edu.uniquindio.ingesis.pokeapi.data.mapper.toDomain
 import co.edu.uniquindio.ingesis.pokeapi.data.mapper.toEntity
 import co.edu.uniquindio.ingesis.pokeapi.data.mapper.toListItemOrNull
 import co.edu.uniquindio.ingesis.pokeapi.data.remote.api.PokemonApiService
+import co.edu.uniquindio.ingesis.pokeapi.data.remote.dto.PokemonSpeciesDto
+import co.edu.uniquindio.ingesis.pokeapi.data.remote.dto.TypeDetailDto
 import co.edu.uniquindio.ingesis.pokeapi.domain.model.Pokemon
 import co.edu.uniquindio.ingesis.pokeapi.domain.model.PokemonListItem
 import co.edu.uniquindio.ingesis.pokeapi.domain.repository.PokemonRepository
@@ -41,15 +43,17 @@ class PokemonRepositoryImpl
 
         override suspend fun fetchPokemonDetail(id: Int) {
             val dto = api.getPokemonDetail(id)
-            val speciesDto = runCatching { api.getPokemonSpecies(id) }.getOrNull()
-            val description = speciesDto?.flavorTextEntries
-                ?.find { it.language.name == "es" }?.flavorText
-                ?: speciesDto?.flavorTextEntries?.firstOrNull()?.flavorText
-                ?: ""
-            
-            val detailEntity = dto.toDetailEntity().copy(
-                description = description.replace("\n", " ")
-            )
+            val speciesDto: PokemonSpeciesDto? = runCatching { api.getPokemonSpecies(id) }.getOrNull()
+            val description =
+                speciesDto?.flavorTextEntries
+                    ?.find { entry -> entry.language.name == "es" }?.flavorText
+                    ?: speciesDto?.flavorTextEntries?.firstOrNull()?.flavorText
+                    ?: ""
+
+            val detailEntity =
+                dto.toDetailEntity().copy(
+                    description = description.replace("\n", " "),
+                )
             dao.insertPokemonDetail(detailEntity)
         }
 
@@ -65,8 +69,9 @@ class PokemonRepositoryImpl
         }
 
         override suspend fun fetchPokemonsByType(typeName: String) {
-            val typeDetail = api.getTypeDetail(typeName.lowercase())
-            val listItems = typeDetail.pokemon.map { it.pokemon.toListItemOrNull() }.filterNotNull()
+            val typeDetail: TypeDetailDto = api.getTypeDetail(typeName.lowercase())
+            val listItems: List<PokemonListItem> =
+                typeDetail.pokemon.mapNotNull { it.pokemon.toListItemOrNull() }
             dao.insertPokemonList(listItems.map { it.toEntity() })
         }
     }

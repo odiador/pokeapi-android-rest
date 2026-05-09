@@ -2,9 +2,12 @@ package co.edu.uniquindio.ingesis.pokeapi.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.edu.uniquindio.ingesis.pokeapi.data.remote.api.ConnectivityObserver
 import co.edu.uniquindio.ingesis.pokeapi.domain.model.PokemonListItem
 import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.FetchPokemonPageUseCase
+import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.FetchPokemonsByTypeUseCase
 import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.ObservePokemonListUseCase
+import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.SearchPokemonUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,11 +17,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.ObservePokemonListUseCase
-import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.FetchPokemonPageUseCase
-import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.FetchPokemonsByTypeUseCase
-import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.SearchPokemonUseCase
-import co.edu.uniquindio.ingesis.pokeapi.data.remote.api.ConnectivityObserver
 
 @HiltViewModel
 class PokemonListViewModel
@@ -38,8 +36,8 @@ class PokemonListViewModel
         init {
             connectivityObserver.observe()
                 .onEach { status ->
-                    _uiState.update { 
-                        it.copy(isOnline = status == ConnectivityObserver.Status.Available) 
+                    _uiState.update {
+                        it.copy(isOnline = status == ConnectivityObserver.Status.Available)
                     }
                 }
                 .launchIn(viewModelScope)
@@ -47,13 +45,16 @@ class PokemonListViewModel
             observePokemonList()
                 .onEach { items ->
                     _uiState.update { state ->
-                        val filteredItems = items.filter { item ->
-                            val matchesSearch = state.searchQuery.isBlank() || 
-                                item.name.contains(state.searchQuery, ignoreCase = true)
-                            val matchesType = state.selectedType == null || 
-                                item.types.contains(state.selectedType)
-                            matchesSearch && matchesType
-                        }
+                        val filteredItems =
+                            items.filter { item ->
+                                val matchesSearch =
+                                    state.searchQuery.isBlank() ||
+                                        item.name.contains(state.searchQuery, ignoreCase = true)
+                                val matchesType =
+                                    state.selectedType == null ||
+                                        item.types.contains(state.selectedType)
+                                matchesSearch && matchesType
+                            }
                         state.copy(items = filteredItems, isLoading = false)
                     }
                 }

@@ -2,6 +2,8 @@ package co.edu.uniquindio.ingesis.pokeapi.data.remote.api
 
 import co.edu.uniquindio.ingesis.pokeapi.data.remote.dto.PokemonDto
 import co.edu.uniquindio.ingesis.pokeapi.data.remote.dto.PokemonListResponseDto
+import co.edu.uniquindio.ingesis.pokeapi.data.remote.dto.PokemonSpeciesDto
+import co.edu.uniquindio.ingesis.pokeapi.data.remote.dto.TypeDetailDto
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query

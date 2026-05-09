@@ -2,6 +2,7 @@ package co.edu.uniquindio.ingesis.pokeapi.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.edu.uniquindio.ingesis.pokeapi.data.remote.api.ConnectivityObserver
 import co.edu.uniquindio.ingesis.pokeapi.domain.model.Pokemon
 import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.FetchPokemonDetailUseCase
 import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.ObservePokemonDetailUseCase
@@ -14,7 +15,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import co.edu.uniquindio.ingesis.pokeapi.data.remote.api.ConnectivityObserver
 
 @HiltViewModel
 class PokemonDetailViewModel
@@ -32,8 +32,8 @@ class PokemonDetailViewModel
         init {
             connectivityObserver.observe()
                 .onEach { status ->
-                    _uiState.update { 
-                        it.copy(isOnline = status == ConnectivityObserver.Status.Available) 
+                    _uiState.update {
+                        it.copy(isOnline = status == ConnectivityObserver.Status.Available)
                     }
                 }
                 .launchIn(viewModelScope)

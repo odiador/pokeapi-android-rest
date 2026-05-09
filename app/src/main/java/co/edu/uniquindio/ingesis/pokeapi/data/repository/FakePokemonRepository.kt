@@ -51,6 +51,14 @@ class FakePokemonRepository : PokemonRepository {
         }
     }
 
+    override suspend fun searchPokemon(name: String): Pokemon? {
+        return allPokemon.find { it.name.equals(name, ignoreCase = true) }
+    }
+
+    override suspend fun fetchPokemonsByType(typeName: String) {
+        // No-op for now in fake
+    }
+
     private fun Pokemon.toListItem(): PokemonListItem =
         PokemonListItem(
             id = id,

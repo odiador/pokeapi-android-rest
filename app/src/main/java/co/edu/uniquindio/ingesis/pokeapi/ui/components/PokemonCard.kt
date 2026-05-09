@@ -19,13 +19,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import co.edu.uniquindio.ingesis.pokeapi.domain.model.Pokemon
+import co.edu.uniquindio.ingesis.pokeapi.domain.model.PokemonListItem
 import coil.compose.AsyncImage
 import java.util.Locale
 
 @Composable
 fun PokemonCard(
-    pokemon: Pokemon,
+    pokemon: PokemonListItem,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
