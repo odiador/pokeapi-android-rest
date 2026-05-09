@@ -8,4 +8,5 @@ data class PokemonListEntity(
     @PrimaryKey val id: Int,
     val name: String,
     val imageUrl: String,
+    val typesCsv: String = "",
 )

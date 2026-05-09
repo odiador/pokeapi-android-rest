@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import co.edu.uniquindio.ingesis.pokeapi.data.remote.api.ConnectivityObserver
 
 @HiltViewModel
 class PokemonDetailViewModel
@@ -21,11 +22,22 @@ class PokemonDetailViewModel
     constructor(
         private val observePokemonDetail: ObservePokemonDetailUseCase,
         private val fetchPokemonDetail: FetchPokemonDetailUseCase,
+        private val connectivityObserver: ConnectivityObserver,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(PokemonDetailUiState())
         val uiState: StateFlow<PokemonDetailUiState> = _uiState.asStateFlow()
 
         private var currentId: Int? = null
+
+        init {
+            connectivityObserver.observe()
+                .onEach { status ->
+                    _uiState.update { 
+                        it.copy(isOnline = status == ConnectivityObserver.Status.Available) 
+                    }
+                }
+                .launchIn(viewModelScope)
+        }
 
         fun load(id: Int) {
             if (currentId == id) return
@@ -56,4 +68,5 @@ data class PokemonDetailUiState(
     val pokemon: Pokemon? = null,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
+    val isOnline: Boolean = true,
 )

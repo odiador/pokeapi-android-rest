@@ -30,6 +30,7 @@ fun PokemonListItem.toEntity(): PokemonListEntity =
         id = id,
         name = name,
         imageUrl = imageUrl,
+        typesCsv = types.joinToString(","),
     )
 
 fun PokemonListEntity.toDomain(): PokemonListItem =
@@ -37,6 +38,7 @@ fun PokemonListEntity.toDomain(): PokemonListItem =
         id = id,
         name = name,
         imageUrl = imageUrl,
+        types = typesCsv.split(",").filter { it.isNotBlank() },
     )
 
 fun PokemonDto.toDomain(): Pokemon =
@@ -59,6 +61,14 @@ fun PokemonDto.toDetailEntity(): PokemonDetailEntity =
         weight = weight,
     )
 
+fun PokemonDto.toEntity(): PokemonListEntity =
+    PokemonListEntity(
+        id = id,
+        name = name,
+        imageUrl = sprites.frontDefault ?: spriteUrlFor(id),
+        typesCsv = types.joinToString(",") { it.type.name },
+    )
+
 fun PokemonDetailEntity.toDomain(): Pokemon =
     Pokemon(
         id = id,
@@ -67,4 +77,5 @@ fun PokemonDetailEntity.toDomain(): Pokemon =
         types = typesCsv.split(',').filter { it.isNotBlank() },
         height = height,
         weight = weight,
+        description = description,
     )

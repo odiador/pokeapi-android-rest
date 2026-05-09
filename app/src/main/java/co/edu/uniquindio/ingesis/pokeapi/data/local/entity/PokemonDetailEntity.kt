@@ -11,4 +11,5 @@ data class PokemonDetailEntity(
     val typesCsv: String,
     val height: Int,
     val weight: Int,
+    val description: String = "",
 )

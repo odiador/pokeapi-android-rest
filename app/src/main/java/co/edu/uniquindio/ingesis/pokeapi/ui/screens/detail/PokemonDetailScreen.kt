@@ -1,28 +1,155 @@
 package co.edu.uniquindio.ingesis.pokeapi.ui.screens.detail
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import co.edu.uniquindio.ingesis.pokeapi.ui.viewmodel.PokemonDetailViewModel
+import coil.compose.AsyncImage
+import java.util.Locale
 
 @Composable
-fun pokemonDetailScreen(
+fun PokemonDetailScreen(
     pokemonId: Int,
     onBack: () -> Unit,
+    viewModel: PokemonDetailViewModel = hiltViewModel(),
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(pokemonId) {
+        viewModel.load(pokemonId)
+    }
+
+    Scaffold(
+        topBar = {
+            Column {
+                co.edu.uniquindio.ingesis.pokeapi.ui.components.ConnectionStatusBanner(isOnline = uiState.isOnline)
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                }
+            }
+        },
+    ) { paddingValues ->
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+        ) {
+            uiState.pokemon?.let { pokemon ->
+                PokemonDetailContent(pokemon = pokemon)
+            }
+
+            if (uiState.isLoading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
+        }
+    }
+}
+
+@Composable
+private fun PokemonDetailContent(pokemon: co.edu.uniquindio.ingesis.pokeapi.domain.model.Pokemon) {
     Column(
         modifier =
             Modifier
                 .fillMaxSize()
                 .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(text = "Pokemon detail placeholder: #$pokemonId")
-        Button(onClick = onBack) {
-            Text(text = "Back")
+        AsyncImage(
+            model = pokemon.imageUrl,
+            contentDescription = pokemon.name,
+            modifier =
+                Modifier
+                    .fillMaxWidth(0.6f)
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+            contentScale = ContentScale.Fit,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "#${String.format(Locale.ROOT, "%03d", pokemon.id)}",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.secondary,
+        )
+        Text(
+            text = pokemon.name.replaceFirstChar { it.uppercase() },
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            pokemon.types.forEach { type ->
+                SuggestionChip(
+                    onClick = { },
+                    label = { Text(type) },
+                )
+            }
         }
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            text = pokemon.description,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(horizontal = 8.dp),
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            InfoColumn(label = "Altura", value = "${pokemon.height / 10.0} m")
+            InfoColumn(label = "Peso", value = "${pokemon.weight / 10.0} kg")
+        }
+    }
+}
+
+@Composable
+fun InfoColumn(
+    label: String,
+    value: String,
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = value, 
+            style = MaterialTheme.typography.titleLarge, 
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = label, 
+            style = MaterialTheme.typography.bodyMedium, 
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

@@ -6,8 +6,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import co.edu.uniquindio.ingesis.pokeapi.ui.screens.detail.pokemonDetailScreen
-import co.edu.uniquindio.ingesis.pokeapi.ui.screens.list.pokemonListScreen
+import co.edu.uniquindio.ingesis.pokeapi.ui.screens.detail.PokemonDetailScreen
+import co.edu.uniquindio.ingesis.pokeapi.ui.screens.list.PokemonListScreen
 
 @Composable
 fun appNavHost() {
@@ -18,7 +18,7 @@ fun appNavHost() {
         startDestination = Routes.LIST,
     ) {
         composable(Routes.LIST) {
-            pokemonListScreen(
+            PokemonListScreen(
                 onPokemonClick = { id -> navController.navigate("${Routes.DETAIL}/$id") },
             )
         }
@@ -27,7 +27,7 @@ fun appNavHost() {
             arguments = listOf(navArgument("id") { type = NavType.IntType }),
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getInt("id") ?: return@composable
-            pokemonDetailScreen(
+            PokemonDetailScreen(
                 pokemonId = id,
                 onBack = { navController.popBackStack() },
             )

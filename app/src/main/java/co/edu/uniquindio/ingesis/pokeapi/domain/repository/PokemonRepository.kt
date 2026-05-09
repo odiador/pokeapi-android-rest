@@ -16,6 +16,10 @@ interface PokemonRepository {
 
     suspend fun fetchPokemonDetail(id: Int)
 
+    suspend fun searchPokemon(name: String): Pokemon?
+
+    suspend fun fetchPokemonsByType(typeName: String)
+
     companion object {
         const val DEFAULT_PAGE_SIZE = 20
     }

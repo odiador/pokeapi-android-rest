@@ -41,6 +41,32 @@ class PokemonRepositoryImpl
 
         override suspend fun fetchPokemonDetail(id: Int) {
             val dto = api.getPokemonDetail(id)
-            dao.insertPokemonDetail(dto.toDetailEntity())
+            val speciesDto = runCatching { api.getPokemonSpecies(id) }.getOrNull()
+            val description = speciesDto?.flavorTextEntries
+                ?.find { it.language.name == "es" }?.flavorText
+                ?: speciesDto?.flavorTextEntries?.firstOrNull()?.flavorText
+                ?: ""
+            
+            val detailEntity = dto.toDetailEntity().copy(
+                description = description.replace("\n", " ")
+            )
+            dao.insertPokemonDetail(detailEntity)
+        }
+
+        override suspend fun searchPokemon(name: String): Pokemon? {
+            return runCatching {
+                val dto = api.getPokemonByName(name.lowercase())
+                val pokemon = dto.toDetailEntity().toDomain()
+                dao.insertPokemonDetail(dto.toDetailEntity())
+                // Also add to list if not present
+                dao.insertPokemonList(listOf(dto.toEntity()))
+                pokemon
+            }.getOrNull()
+        }
+
+        override suspend fun fetchPokemonsByType(typeName: String) {
+            val typeDetail = api.getTypeDetail(typeName.lowercase())
+            val listItems = typeDetail.pokemon.map { it.pokemon.toListItemOrNull() }.filterNotNull()
+            dao.insertPokemonList(listItems.map { it.toEntity() })
         }
     }
