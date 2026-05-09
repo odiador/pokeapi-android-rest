@@ -46,9 +46,9 @@ fun ConnectionStatusBanner(isOnline: Boolean) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Sin conexion - mostrando datos guardados",
-                    color = Color.White,
-                    style = MaterialTheme.typography.bodySmall,
+                    text = "Sin conexión - mostrando datos guardados",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onError,
                 )
             }
         }

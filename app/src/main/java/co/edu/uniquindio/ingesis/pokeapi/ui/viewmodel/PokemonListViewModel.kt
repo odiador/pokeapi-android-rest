@@ -7,7 +7,6 @@ import co.edu.uniquindio.ingesis.pokeapi.domain.model.PokemonListItem
 import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.FetchPokemonPageUseCase
 import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.FetchPokemonsByTypeUseCase
 import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.GetAvailableTypesUseCase
-import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.ObservePokemonListUseCase
 import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.SearchPokemonUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -26,7 +26,8 @@ import javax.inject.Inject
 class PokemonListViewModel
     @Inject
     constructor(
-        private val observePokemonList: ObservePokemonListUseCase,
+        private val observeFilteredPokemonList: co.edu.uniquindio.ingesis.pokeapi.domain.usecase
+            .ObserveFilteredPokemonListUseCase,
         private val fetchPokemonPage: FetchPokemonPageUseCase,
         private val searchPokemon: SearchPokemonUseCase,
         private val fetchPokemonsByType: FetchPokemonsByTypeUseCase,
@@ -37,6 +38,7 @@ class PokemonListViewModel
         val uiState: StateFlow<PokemonListUiState> = _uiState.asStateFlow()
 
         private var currentPage = 0
+        private val currentLimit = MutableStateFlow(100) // Start with 100 items
 
         init {
             connectivityObserver.observe()
@@ -47,23 +49,17 @@ class PokemonListViewModel
                 }
                 .launchIn(viewModelScope)
 
-            // Combinar el Flow de la DB con los cambios de búsqueda/filtro de la UI
+            // Combinar los filtros y el límite para obtener el listado paginado de la DB
             combine(
-                observePokemonList(),
                 _uiState.map { it.searchQuery }.distinctUntilChanged(),
                 _uiState.map { it.selectedType }.distinctUntilChanged(),
-            ) { items, query, type ->
-                items.filter { item ->
-                    val matchesSearch =
-                        query.isBlank() ||
-                            item.name.contains(query, ignoreCase = true)
-                    val matchesType =
-                        type == null ||
-                            item.types.contains(type)
-                    matchesSearch && matchesType
-                }
-            }.onEach { filteredItems ->
-                _uiState.update { it.copy(items = filteredItems, isLoading = false) }
+                currentLimit,
+            ) { query, type, limit ->
+                Triple(query, type, limit)
+            }.flatMapLatest { (query, type, limit) ->
+                observeFilteredPokemonList(query, type, limit)
+            }.onEach { items ->
+                _uiState.update { it.copy(items = items, isLoading = false) }
             }.launchIn(viewModelScope)
 
             viewModelScope.launch {
@@ -76,7 +72,8 @@ class PokemonListViewModel
 
         fun onSearchQueryChange(query: String) {
             _uiState.update { it.copy(searchQuery = query) }
-            if (query.length >= 3) {
+            val isNumber = query.toIntOrNull() != null
+            if (isNumber || query.length >= 3) {
                 performSearch(query)
             }
         }
@@ -102,24 +99,50 @@ class PokemonListViewModel
             }
         }
 
+        fun refresh() {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                currentPage = 0
+                runCatching {
+                    fetchPokemonPage(0)
+                    val types = getAvailableTypes()
+                    _uiState.update { it.copy(availableTypes = types) }
+                }.onSuccess {
+                    currentPage = 1
+                    _uiState.update { it.copy(isLoading = false) }
+                }.onFailure { error ->
+                    _uiState.update {
+                        it.copy(isLoading = false, errorMessage = error.message)
+                    }
+                }
+            }
+        }
+
         fun loadNextPage() {
-            if (_uiState.value.isLoading || _uiState.value.searchQuery.isNotBlank()) return
+            if (_uiState.value.isLoading) return
 
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-                runCatching { fetchPokemonPage(currentPage) }
-                    .onSuccess {
-                        currentPage += 1
-                        _uiState.update { it.copy(isLoading = false) }
-                    }
-                    .onFailure { error ->
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                errorMessage = error.message ?: "Unknown error",
-                            )
+
+                // 1. Siempre aumentamos el límite local para ver más de lo que ya tenemos en la DB
+                currentLimit.update { it + 50 }
+
+                // 2. Si hay internet y no estamos buscando nada específico, traemos más de la API
+                val isSearching =
+                    _uiState.value.searchQuery.isNotBlank() || _uiState.value.selectedType != null
+                if (_uiState.value.isOnline && !isSearching) {
+                    runCatching { fetchPokemonPage(currentPage) }
+                        .onSuccess {
+                            currentPage += 1
                         }
-                    }
+                        .onFailure { error ->
+                            _uiState.update {
+                                it.copy(errorMessage = error.message ?: "Error al cargar más datos")
+                            }
+                        }
+                }
+
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }

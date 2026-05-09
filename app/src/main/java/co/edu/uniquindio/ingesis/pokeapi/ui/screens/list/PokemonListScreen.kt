@@ -6,9 +6,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,6 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -26,6 +30,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -34,11 +40,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.edu.uniquindio.ingesis.pokeapi.ui.components.PokemonCard
 import co.edu.uniquindio.ingesis.pokeapi.ui.viewmodel.PokemonListViewModel
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun PokemonListScreen(
     onPokemonClick: (Int) -> Unit,
@@ -83,26 +91,62 @@ fun PokemonListScreen(
             co.edu.uniquindio.ingesis.pokeapi.ui.components.ConnectionStatusBanner(isOnline = uiState.isOnline)
         },
     ) { paddingValues ->
+        PokemonListContent(
+            uiState = uiState,
+            paddingValues = paddingValues,
+            listState = listState,
+            onRefresh = viewModel::refresh,
+            onPokemonClick = onPokemonClick,
+        )
+    }
+}
+
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun PokemonListContent(
+    uiState: co.edu.uniquindio.ingesis.pokeapi.ui.viewmodel.PokemonListUiState,
+    paddingValues: PaddingValues,
+    listState: androidx.compose.foundation.lazy.LazyListState,
+    onRefresh: () -> Unit,
+    onPokemonClick: (Int) -> Unit,
+) {
+    val pullToRefreshState = androidx.compose.material3.pulltorefresh.rememberPullToRefreshState()
+
+    if (pullToRefreshState.isRefreshing) {
+        LaunchedEffect(true) {
+            onRefresh()
+        }
+    }
+
+    LaunchedEffect(uiState.isLoading) {
+        if (!uiState.isLoading) {
+            pullToRefreshState.endRefresh()
+        }
+    }
+
+    Box(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .nestedScroll(pullToRefreshState.nestedScrollConnection),
+    ) {
         if (uiState.items.isEmpty() && !uiState.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(paddingValues),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "No se encontraron Pokemons",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            PokemonEmptyState()
         } else {
             PokemonList(
                 items = uiState.items,
                 isLoading = uiState.isLoading,
                 listState = listState,
-                paddingValues = paddingValues,
+                paddingValues = PaddingValues(0.dp),
                 onPokemonClick = onPokemonClick,
             )
         }
+
+        androidx.compose.material3.pulltorefresh.PullToRefreshContainer(
+            state = pullToRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
     }
 }
 
@@ -238,7 +282,7 @@ fun PokemonSearchBar(
         value = searchQuery,
         onValueChange = onSearchQueryChange,
         modifier = Modifier.fillMaxWidth(),
-        placeholder = { Text("Buscar Pokemon...") },
+        placeholder = { Text("Buscar Pokémon...") },
         leadingIcon = { Icon(androidx.compose.material.icons.Icons.Default.Search, contentDescription = null) },
         trailingIcon = {
             if (searchQuery.isNotEmpty()) {
@@ -255,4 +299,32 @@ fun PokemonSearchBar(
                 unfocusedContainerColor = MaterialTheme.colorScheme.surface,
             ),
     )
+}
+
+@Composable
+private fun PokemonEmptyState() {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Default.SearchOff,
+            contentDescription = null,
+            modifier = Modifier.size(80.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "No se encontraron Pokémon",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = "Intenta con otro nombre o tipo",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        )
+    }
 }

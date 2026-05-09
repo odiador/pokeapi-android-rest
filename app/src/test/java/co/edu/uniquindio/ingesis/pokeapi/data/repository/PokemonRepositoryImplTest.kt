@@ -132,5 +132,9 @@ class PokemonRepositoryImplTest {
         override suspend fun getTypeDetail(name: String): TypeDetailDto {
             return TypeDetailDto(id = 1, name = name, pokemon = emptyList())
         }
+
+        override suspend fun getTypeNames(): PokemonListResponseDto {
+            return PokemonListResponseDto(results = emptyList())
+        }
     }
 }

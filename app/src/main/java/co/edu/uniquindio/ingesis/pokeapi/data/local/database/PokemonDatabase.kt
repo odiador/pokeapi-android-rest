@@ -5,10 +5,15 @@ import androidx.room.RoomDatabase
 import co.edu.uniquindio.ingesis.pokeapi.data.local.dao.PokemonDao
 import co.edu.uniquindio.ingesis.pokeapi.data.local.entity.PokemonDetailEntity
 import co.edu.uniquindio.ingesis.pokeapi.data.local.entity.PokemonListEntity
+import co.edu.uniquindio.ingesis.pokeapi.data.local.entity.PokemonTypeEntity
 
 @Database(
-    entities = [PokemonListEntity::class, PokemonDetailEntity::class],
-    version = 1,
+    entities = [
+        PokemonListEntity::class,
+        PokemonDetailEntity::class,
+        PokemonTypeEntity::class,
+    ],
+    version = 2,
     exportSchema = false,
 )
 abstract class PokemonDatabase : RoomDatabase() {

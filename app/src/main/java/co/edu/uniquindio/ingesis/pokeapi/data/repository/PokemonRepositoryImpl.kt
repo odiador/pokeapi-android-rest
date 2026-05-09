@@ -4,13 +4,14 @@ import co.edu.uniquindio.ingesis.pokeapi.data.local.dao.PokemonDao
 import co.edu.uniquindio.ingesis.pokeapi.data.mapper.toDetailEntity
 import co.edu.uniquindio.ingesis.pokeapi.data.mapper.toDomain
 import co.edu.uniquindio.ingesis.pokeapi.data.mapper.toEntity
-import co.edu.uniquindio.ingesis.pokeapi.data.mapper.toListItemOrNull
 import co.edu.uniquindio.ingesis.pokeapi.data.remote.api.PokemonApiService
 import co.edu.uniquindio.ingesis.pokeapi.data.remote.dto.PokemonSpeciesDto
 import co.edu.uniquindio.ingesis.pokeapi.data.remote.dto.TypeDetailDto
 import co.edu.uniquindio.ingesis.pokeapi.domain.model.Pokemon
 import co.edu.uniquindio.ingesis.pokeapi.domain.model.PokemonListItem
 import co.edu.uniquindio.ingesis.pokeapi.domain.repository.PokemonRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -27,14 +28,34 @@ class PokemonRepositoryImpl
             }
         }
 
+        override fun observeFilteredPokemonList(
+            query: String,
+            type: String?,
+            limit: Int,
+            offset: Int,
+        ): Flow<List<PokemonListItem>> {
+            return dao.observeFilteredPokemonList(query, type, limit, offset).map { items ->
+                items.map { it.toDomain() }
+            }
+        }
+
         override suspend fun fetchPokemonPage(
             page: Int,
             pageSize: Int,
         ) {
             val offset = page * pageSize
             val response = api.getPokemonList(offset, pageSize)
-            val items = response.results.mapNotNull { it.toListItemOrNull() }
-            dao.insertPokemonList(items.map { it.toEntity() })
+
+            // Fetch details for each pokemon in parallel to get types
+            val entities =
+                coroutineScope {
+                    response.results.mapNotNull { resource ->
+                        val id = resource.url?.trimEnd('/')?.substringAfterLast('/')?.toIntOrNull()
+                        id?.let { async { runCatching { api.getPokemonDetail(it) }.getOrNull() } }
+                    }.mapNotNull { it.await()?.toEntity() }
+                }
+
+            dao.insertPokemonList(entities)
         }
 
         override fun observePokemonDetail(id: Int): Flow<Pokemon?> {
@@ -60,8 +81,7 @@ class PokemonRepositoryImpl
         override suspend fun searchPokemon(name: String): Pokemon? {
             return runCatching {
                 val dto = api.getPokemonByName(name.lowercase())
-                val pokemon = dto.toDetailEntity().toDomain()
-                dao.insertPokemonDetail(dto.toDetailEntity())
+                val pokemon = dto.toDomain()
                 // Also add to list if not present
                 dao.insertPokemonList(listOf(dto.toEntity()))
                 pokemon
@@ -70,14 +90,34 @@ class PokemonRepositoryImpl
 
         override suspend fun fetchPokemonsByType(typeName: String) {
             val typeDetail: TypeDetailDto = api.getTypeDetail(typeName.lowercase())
-            val listItems: List<PokemonListItem> =
-                typeDetail.pokemon.mapNotNull { it.pokemon.toListItemOrNull() }
-            dao.insertPokemonList(listItems.map { it.toEntity() })
+
+            // Limit to first 40 to avoid massive network surge
+            val pokemonRefs = typeDetail.pokemon.take(40)
+
+            val entities =
+                coroutineScope {
+                    pokemonRefs.map { ref ->
+                        val id = ref.pokemon.url?.trimEnd('/')?.substringAfterLast('/')?.toIntOrNull()
+                        async { id?.let { runCatching { api.getPokemonDetail(it) }.getOrNull() } }
+                    }.mapNotNull { it.await()?.toEntity() }
+                }
+
+            dao.insertPokemonList(entities)
         }
 
         override suspend fun getAvailableTypes(): List<String> {
             return runCatching {
-                api.getTypeNames().results.map { it.name }
-            }.getOrDefault(emptyList())
+                val types = api.getTypeNames().results.map { it.name }
+                if (types.isNotEmpty()) {
+                    dao.insertTypes(
+                        types.map {
+                            co.edu.uniquindio.ingesis.pokeapi.data.local.entity.PokemonTypeEntity(it)
+                        },
+                    )
+                }
+                types
+            }.getOrElse {
+                dao.getAllTypes()
+            }
         }
     }

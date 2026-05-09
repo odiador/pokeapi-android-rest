@@ -7,6 +7,13 @@ import kotlinx.coroutines.flow.Flow
 interface PokemonRepository {
     fun observePokemonList(): Flow<List<PokemonListItem>>
 
+    fun observeFilteredPokemonList(
+        query: String,
+        type: String?,
+        limit: Int = 1000,
+        offset: Int = 0,
+    ): Flow<List<PokemonListItem>>
+
     suspend fun fetchPokemonPage(
         page: Int,
         pageSize: Int = DEFAULT_PAGE_SIZE,
