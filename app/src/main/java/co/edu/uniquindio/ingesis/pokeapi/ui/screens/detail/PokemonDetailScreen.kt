@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -35,6 +36,7 @@ import co.edu.uniquindio.ingesis.pokeapi.ui.viewmodel.PokemonDetailViewModel
 import coil.compose.AsyncImage
 import java.util.Locale
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun PokemonDetailScreen(
     pokemonId: Int,
@@ -49,12 +51,30 @@ fun PokemonDetailScreen(
 
     Scaffold(
         topBar = {
-            Column {
-                co.edu.uniquindio.ingesis.pokeapi.ui.components.ConnectionStatusBanner(isOnline = uiState.isOnline)
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                }
-            }
+            androidx.compose.material3.CenterAlignedTopAppBar(
+                modifier = Modifier.statusBarsPadding(),
+                title = {
+                    Text(
+                        text = "Detalles del Pokemon",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver",
+                        )
+                    }
+                },
+                colors =
+                    androidx.compose.material3.TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                    ),
+            )
+        },
+        bottomBar = {
+            co.edu.uniquindio.ingesis.pokeapi.ui.components.ConnectionStatusBanner(isOnline = uiState.isOnline)
         },
     ) { paddingValues ->
         Box(

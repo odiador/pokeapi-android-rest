@@ -1,4 +1,5 @@
 package co.edu.uniquindio.ingesis.pokeapi.ui.components
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,7 +18,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -31,16 +31,23 @@ fun PokemonCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val primaryType = pokemon.types.firstOrNull() ?: ""
+    val typeColor = co.edu.uniquindio.ingesis.pokeapi.ui.theme.PokemonTypeColors.getColor(primaryType)
+
     Card(
         modifier =
             modifier
                 .fillMaxWidth()
                 .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = typeColor.copy(alpha = 0.08f),
+            ),
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AsyncImage(
@@ -49,37 +56,50 @@ fun PokemonCard(
                 modifier =
                     Modifier
                         .size(80.dp)
-                        .clip(RoundedCornerShape(8.dp)),
+                        .background(typeColor.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+                        .padding(8.dp),
                 contentScale = ContentScale.Fit,
             )
             Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "#${String.format(Locale.ROOT, "%03d", pokemon.id)}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = pokemon.name.replaceFirstChar { it.uppercase() },
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    pokemon.types.forEach { type ->
-                        androidx.compose.material3.Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = co.edu.uniquindio.ingesis.pokeapi.ui.theme.PokemonTypeColors.getColor(type),
-                        ) {
-                            Text(
-                                text = type.uppercase(),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = androidx.compose.ui.graphics.Color.White,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
-                    }
+            PokemonCardInfo(
+                pokemon = pokemon,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun PokemonCardInfo(
+    pokemon: PokemonListItem,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = "#${String.format(Locale.ROOT, "%03d", pokemon.id)}",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            text = pokemon.name.replaceFirstChar { it.uppercase() },
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.ExtraBold,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            pokemon.types.forEach { type ->
+                androidx.compose.material3.Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = co.edu.uniquindio.ingesis.pokeapi.ui.theme.PokemonTypeColors.getColor(type),
+                ) {
+                    Text(
+                        text = type.uppercase(),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = androidx.compose.ui.graphics.Color.White,
+                        fontWeight = FontWeight.Black,
+                    )
                 }
             }
         }

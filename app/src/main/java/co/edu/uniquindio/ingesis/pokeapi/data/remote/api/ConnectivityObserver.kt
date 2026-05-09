@@ -28,6 +28,15 @@ class NetworkConnectivityObserver(
 
     override fun observe(): Flow<ConnectivityObserver.Status> {
         return callbackFlow {
+            // Enviar estado inicial inmediatamente
+            val initialStatus =
+                if (connectivityManager.activeNetwork != null) {
+                    ConnectivityObserver.Status.Available
+                } else {
+                    ConnectivityObserver.Status.Unavailable
+                }
+            launch { send(initialStatus) }
+
             val callback =
                 object : ConnectivityManager.NetworkCallback() {
                     override fun onAvailable(network: Network) {

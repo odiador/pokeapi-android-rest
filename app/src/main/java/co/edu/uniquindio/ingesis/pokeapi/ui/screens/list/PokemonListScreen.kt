@@ -6,11 +6,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -115,47 +114,77 @@ private fun PokemonTopBar(
     onTypeSelected: (String) -> Unit,
     types: List<String>,
 ) {
-    Column(
+    androidx.compose.material3.Surface(
+        tonalElevation = 8.dp,
+        shadowElevation = 8.dp,
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(bottom = 8.dp),
+        ) {
+            Box(modifier = Modifier.padding(16.dp)) {
+                PokemonSearchBar(
+                    searchQuery = searchQuery,
+                    onSearchQueryChange = onSearchQueryChange,
+                )
+            }
+            PokemonTypeFilter(
+                types = types,
+                selectedType = selectedType,
+                onTypeSelected = onTypeSelected,
+            )
+        }
+    }
+}
+
+@Composable
+private fun PokemonTypeFilter(
+    types: List<String>,
+    selectedType: String?,
+    onTypeSelected: (String) -> Unit,
+) {
+    Row(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
-                .padding(16.dp),
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        PokemonSearchBar(
-            searchQuery = searchQuery,
-            onSearchQueryChange = onSearchQueryChange,
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Row(
-            modifier = Modifier.horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            types.forEach { type ->
-                val typeColor = co.edu.uniquindio.ingesis.pokeapi.ui.theme.PokemonTypeColors.getColor(type)
-                androidx.compose.material3.FilterChip(
-                    selected = selectedType == type,
-                    onClick = {
-                        if (selectedType == type) {
-                            onTypeSelected("")
-                        } else {
-                            onTypeSelected(type)
-                        }
-                    },
-                    label = {
-                        Text(
-                            text = type.uppercase(),
-                            fontWeight =
-                                if (selectedType == type) androidx.compose.ui.text.font.FontWeight.Bold else null,
-                        )
-                    },
-                    colors =
-                        androidx.compose.material3.FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = typeColor,
-                            selectedLabelColor = androidx.compose.ui.graphics.Color.White,
-                        ),
-                )
-            }
+        types.forEach { type ->
+            val typeColor = co.edu.uniquindio.ingesis.pokeapi.ui.theme.PokemonTypeColors.getColor(type)
+            androidx.compose.material3.FilterChip(
+                selected = selectedType == type,
+                onClick = {
+                    if (selectedType == type) {
+                        onTypeSelected("")
+                    } else {
+                        onTypeSelected(type)
+                    }
+                },
+                label = {
+                    Text(
+                        text = type.uppercase(),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight =
+                            if (selectedType == type) {
+                                androidx.compose.ui.text.font.FontWeight.ExtraBold
+                            } else {
+                                null
+                            },
+                    )
+                },
+                colors =
+                    androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = typeColor,
+                        selectedLabelColor = androidx.compose.ui.graphics.Color.White,
+                    ),
+            )
         }
     }
 }
@@ -198,4 +227,32 @@ private fun PokemonList(
             }
         }
     }
+}
+
+@Composable
+fun PokemonSearchBar(
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+) {
+    androidx.compose.material3.OutlinedTextField(
+        value = searchQuery,
+        onValueChange = onSearchQueryChange,
+        modifier = Modifier.fillMaxWidth(),
+        placeholder = { Text("Buscar Pokemon...") },
+        leadingIcon = { Icon(androidx.compose.material.icons.Icons.Default.Search, contentDescription = null) },
+        trailingIcon = {
+            if (searchQuery.isNotEmpty()) {
+                androidx.compose.material3.IconButton(onClick = { onSearchQueryChange("") }) {
+                    Icon(androidx.compose.material.icons.Icons.Default.Clear, contentDescription = "Clear")
+                }
+            }
+        },
+        singleLine = true,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+        colors =
+            androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            ),
+    )
 }

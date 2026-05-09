@@ -6,6 +6,7 @@ import co.edu.uniquindio.ingesis.pokeapi.data.remote.api.ConnectivityObserver
 import co.edu.uniquindio.ingesis.pokeapi.domain.model.PokemonListItem
 import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.FetchPokemonPageUseCase
 import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.FetchPokemonsByTypeUseCase
+import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.GetAvailableTypesUseCase
 import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.ObservePokemonListUseCase
 import co.edu.uniquindio.ingesis.pokeapi.domain.usecase.SearchPokemonUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,6 +30,7 @@ class PokemonListViewModel
         private val fetchPokemonPage: FetchPokemonPageUseCase,
         private val searchPokemon: SearchPokemonUseCase,
         private val fetchPokemonsByType: FetchPokemonsByTypeUseCase,
+        private val getAvailableTypes: GetAvailableTypesUseCase,
         private val connectivityObserver: ConnectivityObserver,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(PokemonListUiState())
