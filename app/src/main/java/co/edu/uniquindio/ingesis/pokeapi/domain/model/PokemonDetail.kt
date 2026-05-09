@@ -9,15 +9,15 @@ data class PokemonDetail(
     val spriteUrl: String?,
     val types: List<String>,
     val abilities: List<PokemonAbility>,
-    val stats: List<PokemonStat>
+    val stats: List<PokemonStat>,
 )
 
 data class PokemonAbility(
     val name: String,
-    val isHidden: Boolean
+    val isHidden: Boolean,
 )
 
 data class PokemonStat(
     val name: String,
-    val value: Int
+    val value: Int,
 )

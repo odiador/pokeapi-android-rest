@@ -10,5 +10,5 @@ data class PokemonListUiState(
     val hasReachedEnd: Boolean = false,
     val error: String? = null,
     val searchQuery: String = "",
-    val activeTypeFilter: String? = null
+    val activeTypeFilter: String? = null,
 )

@@ -7,5 +7,5 @@ import androidx.room.PrimaryKey
 data class PokemonCacheEntity(
     @PrimaryKey val id: Int,
     val name: String,
-    val spriteUrl: String?
+    val spriteUrl: String?,
 )

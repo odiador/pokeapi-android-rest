@@ -7,11 +7,8 @@ import androidx.room.PrimaryKey
 data class PokemonDetailEntity(
     @PrimaryKey val id: Int,
     val name: String,
+    val imageUrl: String,
+    val typesCsv: String,
     val height: Int,
     val weight: Int,
-    val baseExperience: Int?,
-    val spriteUrl: String?,
-    val typesJson: String,       // JSON array: ["grass","poison"]
-    val abilitiesJson: String,   // JSON array: [{"name":"overgrow","isHidden":false}]
-    val statsJson: String        // JSON array: [{"name":"hp","value":45}]
 )

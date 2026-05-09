@@ -1,7 +1,10 @@
 package co.edu.uniquindio.ingesis.pokeapi.di
 
-import com.google.gson.Gson
-import co.edu.uniquindio.ingesis.pokeapi.data.api.PokeApiService
+import co.edu.uniquindio.ingesis.pokeapi.BuildConfig
+import co.edu.uniquindio.ingesis.pokeapi.data.remote.api.ApiConstants
+import co.edu.uniquindio.ingesis.pokeapi.data.remote.api.PokemonApiService
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -9,44 +12,53 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
+import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-
-    private const val BASE_URL = "https://pokeapi.co/api/v2/"
-
     @Provides
     @Singleton
-    fun provideGson(): Gson = Gson()
-
-    @Provides
-    @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
-        val logging = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BASIC
-        }
-        return OkHttpClient.Builder()
-            .addInterceptor(logging)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
+    fun provideMoshi(): Moshi {
+        return Moshi.Builder()
+            .add(KotlinJsonAdapterFactory())
             .build()
     }
 
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit =
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create(gson))
+    fun provideOkHttpClient(): OkHttpClient {
+        val logging =
+            HttpLoggingInterceptor().apply {
+                level =
+                    if (BuildConfig.DEBUG) {
+                        HttpLoggingInterceptor.Level.BODY
+                    } else {
+                        HttpLoggingInterceptor.Level.NONE
+                    }
+            }
+        return OkHttpClient.Builder()
+            .addInterceptor(logging)
             .build()
+    }
 
     @Provides
     @Singleton
-    fun providePokeApiService(retrofit: Retrofit): PokeApiService =
-        retrofit.create(PokeApiService::class.java)
+    fun provideRetrofit(
+        okHttpClient: OkHttpClient,
+        moshi: Moshi,
+    ): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(ApiConstants.BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun providePokemonApiService(retrofit: Retrofit): PokemonApiService {
+        return retrofit.create(PokemonApiService::class.java)
+    }
 }

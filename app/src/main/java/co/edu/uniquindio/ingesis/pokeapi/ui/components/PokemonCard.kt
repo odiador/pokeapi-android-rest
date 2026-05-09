@@ -1,5 +1,4 @@
 package co.edu.uniquindio.ingesis.pokeapi.ui.components
-
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,45 +19,48 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import co.edu.uniquindio.ingesis.pokeapi.domain.model.Pokemon
+import coil.compose.AsyncImage
+import java.util.Locale
 
 @Composable
 fun PokemonCard(
     pokemon: Pokemon,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             AsyncImage(
-                model = pokemon.spriteUrl,
+                model = pokemon.imageUrl,
                 contentDescription = pokemon.name,
-                modifier = Modifier
-                    .size(72.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Fit
+                modifier =
+                    Modifier
+                        .size(72.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Fit,
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(
-                    text = "#${String.format("%03d", pokemon.id)}",
+                    text = "#${String.format(Locale.ROOT, "%03d", pokemon.id)}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
                     text = pokemon.name.replaceFirstChar { it.uppercase() },
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             }
         }
