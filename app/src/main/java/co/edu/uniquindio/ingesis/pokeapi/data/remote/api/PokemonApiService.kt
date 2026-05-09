@@ -34,4 +34,7 @@ interface PokemonApiService {
     suspend fun getTypeDetail(
         @Path("name") name: String,
     ): TypeDetailDto
+
+    @GET("type")
+    suspend fun getTypeNames(): co.edu.uniquindio.ingesis.pokeapi.data.remote.dto.PokemonListResponseDto
 }

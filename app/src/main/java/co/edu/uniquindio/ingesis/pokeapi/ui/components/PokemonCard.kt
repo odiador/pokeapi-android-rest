@@ -1,9 +1,11 @@
 package co.edu.uniquindio.ingesis.pokeapi.ui.components
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -46,12 +48,12 @@ fun PokemonCard(
                 contentDescription = pokemon.name,
                 modifier =
                     Modifier
-                        .size(72.dp)
+                        .size(80.dp)
                         .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Fit,
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "#${String.format(Locale.ROOT, "%03d", pokemon.id)}",
                     style = MaterialTheme.typography.labelSmall,
@@ -59,9 +61,26 @@ fun PokemonCard(
                 )
                 Text(
                     text = pokemon.name.replaceFirstChar { it.uppercase() },
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                 )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    pokemon.types.forEach { type ->
+                        androidx.compose.material3.Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = co.edu.uniquindio.ingesis.pokeapi.ui.theme.PokemonTypeColors.getColor(type),
+                        ) {
+                            Text(
+                                text = type.uppercase(),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = androidx.compose.ui.graphics.Color.White,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
             }
         }
     }

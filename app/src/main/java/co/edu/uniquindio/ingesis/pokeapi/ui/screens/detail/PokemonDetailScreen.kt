@@ -19,7 +19,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -107,14 +106,7 @@ private fun PokemonDetailContent(pokemon: co.edu.uniquindio.ingesis.pokeapi.doma
             fontWeight = FontWeight.Bold,
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            pokemon.types.forEach { type ->
-                SuggestionChip(
-                    onClick = { },
-                    label = { Text(type) },
-                )
-            }
-        }
+        PokemonTypesRow(types = pokemon.types)
         Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = pokemon.description,
@@ -128,6 +120,26 @@ private fun PokemonDetailContent(pokemon: co.edu.uniquindio.ingesis.pokeapi.doma
         ) {
             InfoColumn(label = "Altura", value = "${pokemon.height / 10.0} m")
             InfoColumn(label = "Peso", value = "${pokemon.weight / 10.0} kg")
+        }
+    }
+}
+
+@Composable
+fun PokemonTypesRow(types: List<String>) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        types.forEach { type ->
+            androidx.compose.material3.Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = co.edu.uniquindio.ingesis.pokeapi.ui.theme.PokemonTypeColors.getColor(type),
+            ) {
+                Text(
+                    text = type.uppercase(),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = androidx.compose.ui.graphics.Color.White,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
         }
     }
 }

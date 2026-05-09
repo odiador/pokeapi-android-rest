@@ -20,6 +20,8 @@ interface PokemonRepository {
 
     suspend fun fetchPokemonsByType(typeName: String)
 
+    suspend fun getAvailableTypes(): List<String>
+
     companion object {
         const val DEFAULT_PAGE_SIZE = 20
     }

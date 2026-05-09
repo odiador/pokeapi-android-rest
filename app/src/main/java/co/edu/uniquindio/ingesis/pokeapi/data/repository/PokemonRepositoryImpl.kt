@@ -74,4 +74,10 @@ class PokemonRepositoryImpl
                 typeDetail.pokemon.mapNotNull { it.pokemon.toListItemOrNull() }
             dao.insertPokemonList(listItems.map { it.toEntity() })
         }
+
+        override suspend fun getAvailableTypes(): List<String> {
+            return runCatching {
+                api.getTypeNames().results.map { it.name }
+            }.getOrDefault(emptyList())
+        }
     }

@@ -59,6 +59,10 @@ class FakePokemonRepository : PokemonRepository {
         // No-op for now in fake
     }
 
+    override suspend fun getAvailableTypes(): List<String> {
+        return listOf("grass", "fire", "water")
+    }
+
     private fun Pokemon.toListItem(): PokemonListItem =
         PokemonListItem(
             id = id,

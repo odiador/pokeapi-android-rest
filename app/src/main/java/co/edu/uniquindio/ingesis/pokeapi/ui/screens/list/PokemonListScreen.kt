@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
@@ -76,8 +77,11 @@ fun PokemonListScreen(
                 onSearchQueryChange = viewModel::onSearchQueryChange,
                 selectedType = uiState.selectedType,
                 onTypeSelected = viewModel::onTypeSelected,
-                isOnline = uiState.isOnline,
+                types = uiState.availableTypes,
             )
+        },
+        bottomBar = {
+            co.edu.uniquindio.ingesis.pokeapi.ui.components.ConnectionStatusBanner(isOnline = uiState.isOnline)
         },
     ) { paddingValues ->
         if (uiState.items.isEmpty() && !uiState.isLoading) {
@@ -109,52 +113,48 @@ private fun PokemonTopBar(
     onSearchQueryChange: (String) -> Unit,
     selectedType: String?,
     onTypeSelected: (String) -> Unit,
-    isOnline: Boolean,
+    types: List<String>,
 ) {
-    val types =
-        listOf(
-            "grass",
-            "fire",
-            "water",
-            "bug",
-            "normal",
-            "poison",
-            "electric",
-            "ground",
-            "fairy",
-            "fighting",
-            "psychic",
-            "rock",
-            "ghost",
-            "ice",
-            "dragon",
-            "dark",
-            "steel",
-            "flying",
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                .padding(16.dp),
+    ) {
+        PokemonSearchBar(
+            searchQuery = searchQuery,
+            onSearchQueryChange = onSearchQueryChange,
         )
-    Column {
-        co.edu.uniquindio.ingesis.pokeapi.ui.components.ConnectionStatusBanner(isOnline = isOnline)
-        Column(modifier = Modifier.padding(16.dp)) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = onSearchQueryChange,
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Buscar Pokemon...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                singleLine = true,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                types.forEach { type ->
-                    FilterChip(
-                        selected = selectedType == type,
-                        onClick = { onTypeSelected(type) },
-                        label = { Text(type) },
-                    )
-                }
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            types.forEach { type ->
+                val typeColor = co.edu.uniquindio.ingesis.pokeapi.ui.theme.PokemonTypeColors.getColor(type)
+                androidx.compose.material3.FilterChip(
+                    selected = selectedType == type,
+                    onClick = {
+                        if (selectedType == type) {
+                            onTypeSelected("")
+                        } else {
+                            onTypeSelected(type)
+                        }
+                    },
+                    label = {
+                        Text(
+                            text = type.uppercase(),
+                            fontWeight =
+                                if (selectedType == type) androidx.compose.ui.text.font.FontWeight.Bold else null,
+                        )
+                    },
+                    colors =
+                        androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = typeColor,
+                            selectedLabelColor = androidx.compose.ui.graphics.Color.White,
+                        ),
+                )
             }
         }
     }

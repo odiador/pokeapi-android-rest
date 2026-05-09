@@ -12,7 +12,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -42,23 +45,29 @@ class PokemonListViewModel
                 }
                 .launchIn(viewModelScope)
 
-            observePokemonList()
-                .onEach { items ->
-                    _uiState.update { state ->
-                        val filteredItems =
-                            items.filter { item ->
-                                val matchesSearch =
-                                    state.searchQuery.isBlank() ||
-                                        item.name.contains(state.searchQuery, ignoreCase = true)
-                                val matchesType =
-                                    state.selectedType == null ||
-                                        item.types.contains(state.selectedType)
-                                matchesSearch && matchesType
-                            }
-                        state.copy(items = filteredItems, isLoading = false)
-                    }
+            // Combinar el Flow de la DB con los cambios de búsqueda/filtro de la UI
+            combine(
+                observePokemonList(),
+                _uiState.map { it.searchQuery }.distinctUntilChanged(),
+                _uiState.map { it.selectedType }.distinctUntilChanged(),
+            ) { items, query, type ->
+                items.filter { item ->
+                    val matchesSearch =
+                        query.isBlank() ||
+                            item.name.contains(query, ignoreCase = true)
+                    val matchesType =
+                        type == null ||
+                            item.types.contains(type)
+                    matchesSearch && matchesType
                 }
-                .launchIn(viewModelScope)
+            }.onEach { filteredItems ->
+                _uiState.update { it.copy(items = filteredItems, isLoading = false) }
+            }.launchIn(viewModelScope)
+
+            viewModelScope.launch {
+                val types = getAvailableTypes()
+                _uiState.update { it.copy(availableTypes = types) }
+            }
 
             loadNextPage()
         }
@@ -77,13 +86,17 @@ class PokemonListViewModel
         }
 
         fun onTypeSelected(type: String) {
-            _uiState.update { it.copy(selectedType = type, isLoading = true) }
-            viewModelScope.launch {
-                runCatching { fetchPokemonsByType(type) }
-                    .onFailure { error ->
-                        _uiState.update { it.copy(errorMessage = error.message) }
-                    }
-                _uiState.update { it.copy(isLoading = false) }
+            val actualType = type.takeIf { it.isNotBlank() }
+            _uiState.update { it.copy(selectedType = actualType, isLoading = actualType != null) }
+
+            if (actualType != null) {
+                viewModelScope.launch {
+                    runCatching { fetchPokemonsByType(actualType) }
+                        .onFailure { error ->
+                            _uiState.update { it.copy(errorMessage = error.message) }
+                        }
+                    _uiState.update { it.copy(isLoading = false) }
+                }
             }
         }
 
@@ -116,4 +129,5 @@ data class PokemonListUiState(
     val searchQuery: String = "",
     val selectedType: String? = null,
     val isOnline: Boolean = true,
+    val availableTypes: List<String> = emptyList(),
 )
