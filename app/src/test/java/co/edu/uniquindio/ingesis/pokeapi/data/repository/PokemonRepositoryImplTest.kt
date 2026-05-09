@@ -18,8 +18,10 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
+@Config(sdk = [33])
 class PokemonRepositoryImplTest {
     private lateinit var database: PokemonDatabase
     private lateinit var repository: PokemonRepositoryImpl
@@ -40,7 +42,7 @@ class PokemonRepositoryImplTest {
     }
 
     @Test
-    fun fetchPokemonPage_persistsListItems() =
+    fun fetchPokemonPagePersistsListItems() =
         runTest {
             repository.fetchPokemonPage(page = 0, pageSize = 2)
 
@@ -55,7 +57,7 @@ class PokemonRepositoryImplTest {
         }
 
     @Test
-    fun fetchPokemonDetail_persistsDetail() =
+    fun fetchPokemonDetailPersistsDetail() =
         runTest {
             repository.fetchPokemonDetail(1)
 

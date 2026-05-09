@@ -38,7 +38,7 @@ class PokemonDaoTest {
     }
 
     @Test
-    fun insertPokemonList_persistsAndOrdersById() =
+    fun insertPokemonListPersistsAndOrdersById() =
         runTest {
             val items =
                 listOf(
@@ -54,7 +54,7 @@ class PokemonDaoTest {
         }
 
     @Test
-    fun insertPokemonDetail_persists() =
+    fun insertPokemonDetailPersists() =
         runTest {
             val detail =
                 PokemonDetailEntity(
